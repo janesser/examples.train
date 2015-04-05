@@ -28,7 +28,7 @@ class SimpleScheduleSolverSpec extends FlatSpec with Matchers with Networks with
     solveAndMeasure(linear(3), trains(1), 2 * DEFAULT_DISTANCE / DEFAULT_SPEED)
 
   it should "solve triangle" in
-    solveAndMeasure(triangle, trains(1), 3 * DEFAULT_DISTANCE / DEFAULT_SPEED)
+    solveAndMeasure(triangle, trains(1), 2 * DEFAULT_DISTANCE / DEFAULT_SPEED)
 
   it should "solve independent train routes" in {
     val net1 = linear(2)

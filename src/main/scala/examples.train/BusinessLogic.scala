@@ -8,28 +8,39 @@ trait NetworkAnalyser {
   require(network.nonEmpty)
 
   def findRoute(s1: Station, s2: Station, part: Seq[Railway] = network): Option[Seq[Railway]] = {
-    def findWay(cur: Station,
-                part: Seq[Railway] = network,
-                candidateRoute: Seq[Railway] = Seq()): Option[Seq[Railway]] = {
-      if (cur == s2) Some(candidateRoute)
-      else {
-        val unvisited = part -- candidateRoute
-        val candidateWays = unvisited.filter(r => r.s1 == cur || r.s2 == cur)
-        if (candidateWays.isEmpty) None
-        else candidateWays map {
-          w =>
-            val next = List(w.s1, w.s2).filter(_ != cur).head
-            findWay(next, unvisited /* - next */ , w +: candidateRoute)
-        } find {
-          _.isDefined
-        } match {
-          case None => None
-          case Some(routeOpt) => routeOpt
-        }
+    def findWays(candidateRoutesAcc: Map[Station, Seq[Railway]] = Map(),
+                 unvisitedAcc: Seq[Railway] = part): Option[Seq[Railway]] = {
+      candidateRoutesAcc.get(s2) match {
+        case route: Some[Seq[Railway]] => route
+        case None =>
+          // evolve candidates by one way
+          val nextGen = candidateRoutesAcc.foldLeft((candidateRoutesAcc, unvisitedAcc)) {
+            case (acc, candidateRoute: (Station, Seq[Railway])) =>
+              acc match {
+                case (candidateRoutes, unvisited) =>
+                  val ways = connectedWays(candidateRoute._1, unvisited)
+
+                  if (ways.isEmpty) {
+                    // failed candidate
+                    (candidateRoutes - candidateRoute._1, unvisited)
+                  } else {
+                    val nextUnvisited = unvisited.filterNot(ways.contains(_))
+                    val nextCandidateRoutes = ways map {
+                      w =>
+                        w.outer(candidateRoute._1) -> (candidateRoute._2 :+ w)
+                    } toMap
+
+                    (candidateRoutes ++ nextCandidateRoutes, nextUnvisited)
+                  }
+              }
+          }
+
+          if (nextGen._1.isEmpty) None
+          else findWays(nextGen._1, nextGen._2)
       }
     }
 
-    findWay(s1)
+    findWays(Map(s1 -> Seq()))
   }
 
   def connectedWays(s: Station, part: Seq[Railway] = network): Seq[Railway] =
@@ -44,7 +55,7 @@ trait NetworkAnalyser {
       if (ways.isEmpty)
         visitAll(unvisited, heads.tail)
       else {
-        visitAll(unvisited -- ways, heads ++ ways.map(_.s1) ++ ways.map(_.s2))
+        visitAll(unvisited.filter(!ways.contains(_)), heads ++ ways.map(_.s1) ++ ways.map(_.s2))
       }
     }
   }
