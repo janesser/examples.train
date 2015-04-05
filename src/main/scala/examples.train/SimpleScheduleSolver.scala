@@ -3,30 +3,32 @@ package examples.train
 class SimpleScheduleSolver(override val network: Seq[Railway]) extends ScheduleSolver with NetworkAnalyser {
   import scala.language.postfixOps
 
-  override def solve(trains: Seq[Train]): Map[Train, Seq[Railway]] = {
+  override def solve(trains: Seq[Train], part: Seq[Railway] = network): Map[Train, Seq[Railway]] = {
     require(trains.nonEmpty)
 
-    val parts = connectedPartitions(network)
+    val parts = connectedPartitions(part)
     require(parts.nonEmpty)
     require(parts.size <= trains.size)
 
     if (parts.size > 1)
       parts.zip(trains) map {
-        case (part, train) =>
-          train -> new SimpleScheduleSolver(part).solve(Seq(train)).head._2
+        case (partition, train) =>
+          train -> solve(Seq(train), partition).head._2
       } toMap
-    else
-      Map(trains.head -> solve())
+    else {
+      val stations = (part.map(_.s1) ++ part.map(_.s2)).distinct
+      Map(trains.head -> scheduleTrain(stations.tail, stations.head))
+    }
   }
 
-  lazy val stations = network.map(_.s1) ++ network.map(_.s2) distinct
-
-  def solve(unvisited: Seq[Station] = stations.tail, lastStation: Station = stations.head, route: Seq[Railway] = Seq()): Seq[Railway] = {
+  def scheduleTrain(unvisited: Seq[Station],
+            lastStation: Station,
+            route: Seq[Railway] = Seq()): Seq[Railway] = {
     if (unvisited.isEmpty) route
     else {
       val nextStation = unvisited.head
       val r = findRoute(lastStation, nextStation).get
-      solve(unvisited.filter(_ != nextStation), nextStation, route ++ r)
+      scheduleTrain(unvisited.filter(_ != nextStation), nextStation, route ++ r)
     }
   }
 

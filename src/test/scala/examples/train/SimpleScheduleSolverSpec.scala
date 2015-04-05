@@ -21,8 +21,7 @@ class SimpleScheduleSolverSpec extends FlatSpec with Matchers with Networks with
   def solver(network: Seq[Railway]): ScheduleSolver = new SimpleScheduleSolver(network)
 
   def solveAndMeasure(net: (Seq[Station], Seq[Railway]), trains: Seq[Train], expectedMeasure: Time): Unit =
-    new ScheduleAnalyserTest(solver(net._2).solve(
-      trains), expectedMeasure)
+    new ScheduleAnalyserTest(solver(net._2).solve(trains), expectedMeasure)
 
 
   "SimpleScheduleSolver" should "solve linear route" in

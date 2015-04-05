@@ -1,6 +1,6 @@
 package examples.train
 
-case class Train(id: String, speed: Speed)
+case class Train(id: String, spd: Speed)
 
 case class Station(id: String)
 

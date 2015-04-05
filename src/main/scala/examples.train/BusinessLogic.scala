@@ -75,7 +75,7 @@ trait NetworkAnalyser {
 }
 
 trait ScheduleSolver extends NetworkAnalyser {
-  def solve(trains: Seq[Train]): Map[Train, Seq[Railway]]
+  def solve(trains: Seq[Train], part: Seq[Railway] = network): Map[Train, Seq[Railway]]
 }
 
 trait ScheduleAnalyser {
@@ -111,7 +111,7 @@ trait ScheduleAnalyser {
     require(coversAllStations(stations, routes))
     routes map {
       case (train, route) =>
-        measure(train.speed, route)
+        measure(train.spd, route)
     } max
   }
 

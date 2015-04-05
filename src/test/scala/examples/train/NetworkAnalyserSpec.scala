@@ -29,7 +29,7 @@ trait Networks {
   lazy val triangle: (Seq[Station], Seq[Railway]) = {
     val s = stations(3)
     val lin = linear(s)
-    (s, w(s.last, s.head) +: lin)
+    (s, lin :+ w(s.last, s.head))
   }
 
   lazy val cross: (Seq[Station], Seq[Railway]) = {
