@@ -1,6 +1,9 @@
 package examples.train
 
-case class Train(id: String, spd: Speed)
+object Train {
+  def apply(id: String, spd: Speed) = new Train(id, spd)
+}
+class Train(val id: String, val spd: Speed)
 
 case class Station(id: String)
 
