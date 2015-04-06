@@ -1,10 +1,12 @@
-package examples.train
+package examples.train.simulation
 
-object CollisionDetector extends SimulationListener {
+import examples.train.{Railway, Train}
+
+object CollisionDetector extends Listener[SimpleState] {
 
   case class CollisionException(r: Railway, second: Train, first: Train) extends SimulationException
 
-  override def onTrainMove(state: SimulationState,
+  override def onTrainMove(state: SimpleState,
                            second: Train,
                            r: Railway): Unit = {
     state.trains.foreach(
