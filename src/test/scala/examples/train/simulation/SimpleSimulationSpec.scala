@@ -19,7 +19,7 @@ class SimpleSimulationSpec extends FlatSpec with Matchers with Networks with Tra
 
   it should "inform listeners about movings" in {
     val simulator = new SimpleSimulator
-    simulator.listeners += CollisionDetector
+    simulator.register(CollisionDetector)
 
     val route = linear(2)._2
     val simulation = simulator.simulate(Map(t() -> route, t() -> route)).head
@@ -31,8 +31,8 @@ class SimpleSimulationSpec extends FlatSpec with Matchers with Networks with Tra
 
   "SimulationAnalyser" should "record all trains working" in {
     val simulator = new SimpleSimulator
-    val analyser = new SimulationAnalyser[SimpleState]
-    simulator.listeners += analyser
+    val analyser = new SimulationAnalyser
+    simulator.register(analyser)
 
     simulator.simulate(Map(t() -> linear(3)._2)).takeWhile(_.hasMore) should have size 2
 

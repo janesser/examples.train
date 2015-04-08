@@ -8,14 +8,19 @@ trait Simulator[S <: State] {
 
   def simulate(schedules: Map[Train, Seq[Railway]]): Stream[S]
 
-  implicit val listeners:mutable.Buffer[Listener[S]] = mutable.Buffer()
+  protected implicit var listeners: mutable.Seq[Listener[S]] = mutable.Seq()
+
+  def register(l: Listener[S]): Unit =
+    synchronized {
+      listeners = listeners ++ Seq(l)
+    }
 }
 
 trait State
 
 class SimulationException extends Exception
 
-trait Listener[S <: State] {
+trait Listener[-S <: State] {
   @throws[SimulationException]
   def onTrainMove(state: S, t: Train, r: Railway): Unit = {}
 

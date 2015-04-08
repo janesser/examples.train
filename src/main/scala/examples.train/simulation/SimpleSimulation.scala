@@ -49,10 +49,10 @@ case class SimpleState(stepCount: Int,
 
 }
 
-class SimulationAnalyser[S <: State] extends Listener[S] {
+class SimulationAnalyser extends Listener[State] {
   var work: Map[Train, Time] = Map().withDefaultValue(BigDecimal(0))
 
-  override def onTrainMove(state: S, t: Train, r: Railway): Unit =
+  override def onTrainMove(state: State, t: Train, r: Railway): Unit =
     work +=
       t -> (work(t) + time(t.spd, r.d))
 
