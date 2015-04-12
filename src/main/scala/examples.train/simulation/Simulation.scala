@@ -8,11 +8,11 @@ trait Simulator[S <: State] {
 
   def simulate(schedules: Map[Train, Seq[Railway]]): Stream[S]
 
-  protected implicit var listeners: mutable.Seq[Listener[S]] = mutable.Seq()
+  protected implicit val listeners: mutable.Buffer[Listener[S]] = mutable.Buffer()
 
   def register(l: Listener[S]): Unit =
     synchronized {
-      listeners = listeners ++ Seq(l)
+      listeners += l
     }
 }
 

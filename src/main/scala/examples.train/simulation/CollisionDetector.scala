@@ -10,11 +10,12 @@ object CollisionDetector extends Listener[SimpleState] {
                            second: Train,
                            r: Railway): Unit = {
     state.trains.foreach(
-      first => state.locate(first) match {
-        case Some(way) =>
-          if (second != first && way == r)
-            throw new CollisionException(r, second, first)
-        case None => // ignore
-      })
+      first =>
+        state.locate(first) match {
+          case Some(way) =>
+            if (second != first && way == r)
+              throw new CollisionException(r, second, first)
+          case None => // ignore
+        })
   }
 }

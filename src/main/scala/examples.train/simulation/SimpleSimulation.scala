@@ -4,34 +4,29 @@ import examples.train._
 
 class SimpleSimulator extends Simulator[SimpleState] {
 
-  override def simulate(schedules: Map[Train, Seq[Railway]]): Stream[SimpleState] = {
-    def stateStream:Stream[SimpleState] =
-      SimpleState(0, schedules) #:: stateStream.map(_.step())
-    stateStream
-  }
+  def simulationStream(schedules: Map[Train, Seq[Railway]], stepCount: Int = 0): Stream[SimpleState] =
+    SimpleState(stepCount, schedules) #:: simulationStream(schedules map {
+      case (t, route) =>
+        t -> route.tail
+    } filter {
+      case (t, route) =>
+        route.nonEmpty
+    }, stepCount + 1)
+
+  override def simulate(schedules: Map[Train, Seq[Railway]]) =
+    simulationStream(schedules)
 }
 
 case class SimpleState(stepCount: Int,
                        schedules: Map[Train, Seq[Railway]])
                       (implicit listeners: Seq[Listener[SimpleState]]) extends State {
 
-  def step(): SimpleState = {
-    listeners foreach {
-      _.beforeStep(this)
+  listeners foreach { l =>
+    l.beforeStep(this)
+    schedules foreach {
+      case (t, route) =>
+        l.onTrainMove(this, t, route.head)
     }
-
-    val nextSchedules = schedules map {
-      case (t, route) =>
-        listeners foreach {
-          _.onTrainMove(this, t, route.head)
-        }
-        t -> route.tail
-    } filter {
-      case (t, route) =>
-        route.nonEmpty
-    } toMap
-
-    SimpleState(stepCount + 1, nextSchedules)
   }
 
   def trains = schedules.keySet
@@ -46,7 +41,6 @@ case class SimpleState(stepCount: Int,
 
   def hasMore: Boolean =
     schedules.nonEmpty
-
 }
 
 class SimulationAnalyser extends Listener[State] {

@@ -1,43 +1,61 @@
 package examples.train.simulation
 
-import org.scalatest.{FlatSpec, Matchers}
 import examples.train._
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{FlatSpec, Matchers}
 
-class SimpleSimulationSpec extends FlatSpec with Matchers with Networks with Trains {
+class SimpleSimulationSpec
+  extends FlatSpec
+  with Matchers
+  with MockFactory
+  with Networks
+  with Trains {
 
-  "SimpleSimulator" should "simulate linear" in {
-    val simTrains = trains(1)
+  def withSimpleSimulator(testCode: SimpleSimulator => Any): Unit = {
+    val simulator = new SimpleSimulator
+    testCode(simulator)
+  }
 
-    val simulation = new SimpleSimulator().simulate(
-      new SimpleScheduleSolver(linear(3)._2).solve(simTrains))
-    val steps = simulation.takeWhile(_.hasMore)
+  def withSimpleStateSteps(testCode: Seq[SimpleState] => Any): Unit = {
+    val simulator = new SimpleSimulator
+    val simulation = simulator.simulate(Map(t() -> linear(3)._2))
+    testCode(simulation.takeWhile(_.hasMore))
+  }
+
+  "SimpleSimulator" should "simulate linear" in withSimpleStateSteps { steps =>
     steps should have size 2
 
     val first = steps.head
-    first.trains.toSeq shouldEqual simTrains
+    first.trains should have size 1
   }
 
-  it should "inform listeners about movings" in {
-    val simulator = new SimpleSimulator
-    simulator.register(CollisionDetector)
+  it should "notify listeners" in withSimpleSimulator { s =>
+    val l = mock[Listener[SimpleState]]
 
+    (l.beforeStep _).expects(*).repeat(3)
+    (l.onTrainMove _).expects(*, *, *).repeat(2)
+
+    s.register(l)
+    s.simulate(Map(t() -> linear(3)._2)).takeWhile(_.hasMore) should have size 2
+  }
+
+  "CollisionDetector" should "be informed" in withSimpleSimulator { s =>
+    s.register(CollisionDetector)
+
+    // same route for two trains
     val route = linear(2)._2
-    val simulation = simulator.simulate(Map(t() -> route, t() -> route)).head
-    simulation.trains should have size 2
 
     an[CollisionDetector.CollisionException] should be thrownBy
-      simulation.step()
+      s.simulate(Map(t() -> route, t() -> route))
   }
 
-  "SimulationAnalyser" should "record all trains working" in {
-    val simulator = new SimpleSimulator
+  "SimulationAnalyser" should "record all trains working" in withSimpleSimulator { s =>
     val analyser = new SimulationAnalyser
-    simulator.register(analyser)
+    s.register(analyser)
 
-    simulator.simulate(Map(t() -> linear(3)._2)).takeWhile(_.hasMore) should have size 2
+    s.simulate(Map(t() -> linear(3)._2)).takeWhile(_.hasMore) should have size 2
 
     analyser.work should have size 1
-
     analyser.score shouldBe 2 * DEFAULT_DISTANCE / DEFAULT_SPEED
   }
 }
