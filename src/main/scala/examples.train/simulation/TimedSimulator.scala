@@ -2,40 +2,52 @@ package examples.train.simulation
 
 import examples.train._
 
-case class Event(tr: Train, t: Time, r: Railway) extends State {
-  def !(implicit listeners: Seq[Listener[Event]]): Unit =
-    listeners foreach {
-      _.onTrainMove(this, tr, r)
-    }
-}
+import scala.collection.immutable.Iterable
 
-class TimedSimulator extends Simulator[Event] {
+case class Event(time: Time, t: Train, r: Railway) extends State
+
+case class TimedSimulator(lookAhead: Int = 4) extends Simulator[Event] {
+
   import scala.language.postfixOps
-  
-  override def simulate(schedules: Map[Train, Seq[Railway]]): Stream[Event] = {
-    def timedSchedules: Stream[Event] = {
-      val timed = schedules map {
-        case (t, route) =>
-          (t, time(route.head.d, t.spd), route)
-      } toSeq
 
-      timed sortBy {
-        case (t, time, route) =>
-          time
-      } map {
-        case (t, time, route) =>
-          val e = Event(t, time, route.head)
-          listeners foreach {
-            _.beforeStep(e)
-          }
-          e
-      } toStream
+  implicit def timedRouteFlatten(timedTrainRoutes: Iterable[Seq[(Time, Train, Railway)]]): Seq[(Time, Train, Railway)] =
+    timedTrainRoutes.toSeq.flatten
+
+  override def simulate(schedules: Map[Train, Seq[Railway]]): Stream[Event] =
+    if (schedules.isEmpty) Stream.Empty
+    else simulateTime(schedules map {
+      case (t, route) =>
+        route.take(lookAhead).foldLeft((BigDecimal(0), Seq.empty[(Time, Train, Railway)])) {
+          (acc, r) =>
+            val arrivalTime = acc._1 + time(t.spd, r.d)
+            (arrivalTime, acc._2 :+(arrivalTime, t, r))
+        }._2
+    } sortBy { // timedRouteFlatten
+      case (time, t, r) =>
+        /*
+        sort by
+        1) time
+        2) train id
+         */
+        (time, t.id)
+    }) #::: simulate(schedules map {
+      case (t, route) =>
+        t -> route.drop(lookAhead)
+    } filter {
+      case (t, route) =>
+        route.nonEmpty
+    })
+
+  def simulateTime(arrivalsByTime: Seq[(Time, Train, Railway)]): Stream[Event] =
+    arrivalsByTime.headOption match {
+      case Some(arrival) =>
+        val e = Event(arrival._1, arrival._2, arrival._3)
+        listeners foreach { l =>
+          l.beforeStep(e)
+          l.onTrainMove(e, e.t, e.r)
+        }
+        e #:: simulateTime(arrivalsByTime.tail)
+      case None =>
+        Stream.Empty
     }
-
-    timedSchedules append simulate(
-      schedules map {
-        case (t, route) =>
-          t -> route.tail
-      })
-  }
 }

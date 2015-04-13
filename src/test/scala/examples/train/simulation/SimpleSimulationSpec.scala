@@ -2,12 +2,27 @@ package examples.train.simulation
 
 import examples.train._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{Suite, FlatSpec, Matchers}
+
+trait ListenerTest {
+  this: Suite with MockFactory with Networks with Trains =>
+
+  def validateListenerNotification[S <: State](s: Simulator[S]): Unit = {
+    val l = mock[Listener[S]]
+
+    (l.beforeStep _).expects(*).repeat(2)
+    (l.onTrainMove _).expects(*, *, *).repeat(2)
+
+    s.register(l)
+    s.simulate(Map(t() -> linear(3)._2)).force
+  }
+}
 
 class SimpleSimulationSpec
   extends FlatSpec
   with Matchers
   with MockFactory
+  with ListenerTest
   with Networks
   with Trains {
 
@@ -29,15 +44,7 @@ class SimpleSimulationSpec
     first.trains should have size 1
   }
 
-  it should "notify listeners" in withSimpleSimulator { s =>
-    val l = mock[Listener[SimpleState]]
-
-    (l.beforeStep _).expects(*).repeat(3)
-    (l.onTrainMove _).expects(*, *, *).repeat(2)
-
-    s.register(l)
-    s.simulate(Map(t() -> linear(3)._2)).takeWhile(_.hasMore) should have size 2
-  }
+  it should "notify listeners" in withSimpleSimulator(validateListenerNotification)
 
   "CollisionDetector" should "be informed" in withSimpleSimulator { s =>
     s.register(CollisionDetector)

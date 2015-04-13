@@ -5,7 +5,8 @@ import examples.train._
 class SimpleSimulator extends Simulator[SimpleState] {
 
   def simulationStream(schedules: Map[Train, Seq[Railway]], stepCount: Int = 0): Stream[SimpleState] =
-    SimpleState(stepCount, schedules) #:: simulationStream(schedules map {
+    if (schedules.isEmpty) Stream.Empty
+    else SimpleState(stepCount, schedules) #:: simulationStream(schedules map {
       case (t, route) =>
         t -> route.tail
     } filter {
