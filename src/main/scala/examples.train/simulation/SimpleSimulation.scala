@@ -28,6 +28,7 @@ case class SimpleState(stepCount: Int,
       case (t, route) =>
         l.onTrainMove(this, t, route.head)
     }
+    l.afterStep(this)
   }
 
   def trains = schedules.keySet

@@ -12,6 +12,7 @@ trait ListenerTest {
 
     (l.beforeStep _).expects(*).repeat(2)
     (l.onTrainMove _).expects(*, *, *).repeat(2)
+    (l.afterStep _).expects(*).repeat(2)
 
     s.register(l)
     s.simulate(Map(t() -> linear(3)._2)).force

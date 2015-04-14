@@ -1,6 +1,6 @@
-package examples
+package examples.train
 
-package object train {
+object `package` {
 
   type Speed = BigDecimal
   type Distance = BigDecimal

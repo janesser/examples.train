@@ -45,6 +45,7 @@ case class TimedSimulator(lookAhead: Int = 4) extends Simulator[Event] {
         listeners foreach { l =>
           l.beforeStep(e)
           l.onTrainMove(e, e.t, e.r)
+          l.afterStep(e)
         }
         e #:: simulateTime(arrivalsByTime.tail)
       case None =>

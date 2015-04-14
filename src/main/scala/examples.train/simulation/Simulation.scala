@@ -26,4 +26,7 @@ trait Listener[-S <: State] {
 
   @throws[SimulationException]
   def beforeStep(state: S): Unit = {}
+
+  @throws[SimulationException]
+  def afterStep(state:S):Unit = {}
 }
