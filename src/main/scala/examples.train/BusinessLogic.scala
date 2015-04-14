@@ -7,8 +7,8 @@ trait NetworkAnalyser {
 
   require(network.nonEmpty)
 
-  def stations:Set[Station] =
-    network.map(r => Set(r.s1, r.s2)).flatten.toSet
+  def stations:Seq[Station] =
+    network.map(_.s1) ++ network.map(_.s2)
 
   def findRoute(s1: Station, s2: Station, part: Seq[Railway] = network): Option[Seq[Railway]] = {
     def findWays(candidateRoutesAcc: Map[Station, Seq[Railway]] = Map(),

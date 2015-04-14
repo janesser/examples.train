@@ -4,20 +4,22 @@ import examples.train._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Suite, FlatSpec, Matchers}
 
-trait ListenerTest {
+trait ListenerTest[S <: State, T <: Train] {
   this: Suite with MockFactory with Networks with Trains =>
 
-  val expectedEventCount: Int = 2
+  val expectedBeforeCount = 2
+  val expectedTrainMoveCount = 2
+  val expectedAfterCount = 2
 
-  def validateListenerNotification[S <: State, T <: Train](s: Simulator[S, Train]): Unit = {
+  def validateListenerNotification(s: Simulator[S, T])(implicit t: () => T, route:Seq[Railway]): Unit = {
     val l = mock[Listener[S]]
 
-    (l.beforeStep _).expects(*).repeat(expectedEventCount)
-    (l.onTrainMove _).expects(*, *, *).repeat(expectedEventCount)
-    (l.afterStep _).expects(*).repeat(expectedEventCount)
+    (l.beforeStep _).expects(*).repeat(expectedBeforeCount)
+    (l.onTrainMove _).expects(*, *, *).repeat(expectedTrainMoveCount)
+    (l.afterStep _).expects(*).repeat(expectedAfterCount)
 
     s.register(l)
-    s.simulate(Map(t() -> linear(3)._2)).force
+    s.simulate(Map(t() -> route)).force
   }
 }
 
@@ -25,7 +27,7 @@ class SimpleSimulationSpec
   extends FlatSpec
   with Matchers
   with MockFactory
-  with ListenerTest
+  with ListenerTest[SimpleState, Train]
   with Networks
   with Trains {
 
@@ -47,6 +49,7 @@ class SimpleSimulationSpec
     first.trains should have size 1
   }
 
+  implicit val simpleNetwork = linear(3)._2
   it should "notify listeners" in withSimpleSimulator(validateListenerNotification)
 
   "CollisionDetector" should "be informed" in withSimpleSimulator { s =>

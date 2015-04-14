@@ -2,9 +2,11 @@ package examples.train.simulation
 
 import examples.train._
 
-import scala.collection.immutable.Iterable
+object ArrivalEvent {
+  def apply(time: Time, t: Train, r: Railway) = new ArrivalEvent(time, t, r)
+}
 
-case class ArrivalEvent(override val time: Time, t: Train, r: Railway) extends Event
+class ArrivalEvent(override val time: Time, val t: Train, val r: Railway) extends Event
 
 case class TimedSimulator(override val lookAhead: Int = 4) extends TimedSimulation[ArrivalEvent, Train] {
   def simulateTime(arrivalsByTime: Seq[(Time, Train, Seq[Railway])]): Stream[ArrivalEvent] =

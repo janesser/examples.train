@@ -8,7 +8,7 @@ class TimedSimulatorSpec
   extends FlatSpec
   with Matchers
   with MockFactory
-  with ListenerTest
+  with ListenerTest[ArrivalEvent, Train]
   with Trains
   with Networks {
 
@@ -72,5 +72,6 @@ class TimedSimulatorSpec
     eventsA.last.time shouldBe (time(BigDecimal(0.33), BigDecimal(4)))
   }
 
+  implicit val route = linear(3)._2
   it should "notify listeners" in withTimedSimulator(validateListenerNotification)
 }

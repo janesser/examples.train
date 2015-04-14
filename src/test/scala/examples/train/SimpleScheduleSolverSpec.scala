@@ -5,7 +5,7 @@ import org.scalatest.{Matchers, FlatSpec}
 trait Trains {
   val DEFAULT_SPEED: Speed = 1
 
-  def t() = Train(java.util.UUID.randomUUID().toString, DEFAULT_SPEED)
+  implicit def t() = Train(java.util.UUID.randomUUID().toString, DEFAULT_SPEED)
 
   def trains(numberOfTrains: Int = 1): Seq[Train] = {
     require(numberOfTrains > 0)
