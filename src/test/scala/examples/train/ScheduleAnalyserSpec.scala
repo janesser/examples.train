@@ -28,7 +28,5 @@ case class ScheduleAnalyserTest(schedule: Map[Train, Seq[Railway]], expected: Ti
 
   override def network = schedule.values.flatten.toSeq
 
-  def stations = network.map(_.s1) ++ network.map(_.s2)
-
   measure(stations, schedule) shouldBe expected
 }

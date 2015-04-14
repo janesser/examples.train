@@ -7,7 +7,7 @@ import org.scalatest.{Suite, FlatSpec, Matchers}
 trait ListenerTest {
   this: Suite with MockFactory with Networks with Trains =>
 
-  def validateListenerNotification[S <: State](s: Simulator[S]): Unit = {
+  def validateListenerNotification[S <: State](s: Simulator[S, Train]): Unit = {
     val l = mock[Listener[S]]
 
     (l.beforeStep _).expects(*).repeat(2)

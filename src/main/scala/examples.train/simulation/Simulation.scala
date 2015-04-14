@@ -2,11 +2,11 @@ package examples.train.simulation
 
 import examples.train._
 
-trait Simulator[S <: State] {
+trait Simulator[S <: State, T <: Train] {
 
   import scala.collection.mutable
 
-  def simulate(schedules: Map[Train, Seq[Railway]]): Stream[S]
+  def simulate(schedules: Map[T, Seq[Railway]]): Stream[S]
 
   protected implicit val listeners: mutable.Buffer[Listener[S]] = mutable.Buffer()
 

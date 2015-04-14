@@ -4,16 +4,20 @@ import examples.train._
 
 import scala.collection.immutable.Iterable
 
-case class Event(time: Time, t: Train, r: Railway) extends State
+trait Event extends State {
+  def time: Time
+}
 
-case class TimedSimulator(lookAhead: Int = 4) extends Simulator[Event] {
+case class ArrivalEvent(override val time: Time, t: Train, r: Railway) extends Event
+
+class TimedSimulator(lookAhead: Int = 4) extends Simulator[ArrivalEvent, Train] {
 
   import scala.language.postfixOps
 
   implicit def timedRouteFlatten(timedTrainRoutes: Iterable[Seq[(Time, Train, Railway)]]): Seq[(Time, Train, Railway)] =
     timedTrainRoutes.toSeq.flatten
 
-  override def simulate(schedules: Map[Train, Seq[Railway]]): Stream[Event] =
+  override def simulate(schedules: Map[Train, Seq[Railway]]): Stream[ArrivalEvent] =
     if (schedules.isEmpty) Stream.Empty
     else simulateTime(schedules map {
       case (t, route) =>
@@ -22,7 +26,8 @@ case class TimedSimulator(lookAhead: Int = 4) extends Simulator[Event] {
             val arrivalTime = acc._1 + time(t.spd, r.d)
             (arrivalTime, acc._2 :+(arrivalTime, t, r))
         }._2
-    } sortBy { // timedRouteFlatten
+    } sortBy {
+      // timedRouteFlatten
       case (time, t, r) =>
         /*
         sort by
@@ -38,10 +43,10 @@ case class TimedSimulator(lookAhead: Int = 4) extends Simulator[Event] {
         route.nonEmpty
     })
 
-  def simulateTime(arrivalsByTime: Seq[(Time, Train, Railway)]): Stream[Event] =
+  def simulateTime(arrivalsByTime: Seq[(Time, Train, Railway)]): Stream[ArrivalEvent] =
     arrivalsByTime.headOption match {
       case Some(arrival) =>
-        val e = Event(arrival._1, arrival._2, arrival._3)
+        val e = ArrivalEvent(arrival._1, arrival._2, arrival._3)
         listeners foreach { l =>
           l.beforeStep(e)
           l.onTrainMove(e, e.t, e.r)

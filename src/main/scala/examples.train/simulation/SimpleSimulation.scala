@@ -2,7 +2,7 @@ package examples.train.simulation
 
 import examples.train._
 
-class SimpleSimulator extends Simulator[SimpleState] {
+class SimpleSimulator extends Simulator[SimpleState, Train] {
 
   def simulationStream(schedules: Map[Train, Seq[Railway]], stepCount: Int = 0): Stream[SimpleState] =
     if (schedules.isEmpty) Stream.Empty

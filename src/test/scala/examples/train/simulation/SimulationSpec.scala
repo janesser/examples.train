@@ -10,7 +10,7 @@ class SimulationSpec {
 
   trait EnhancedSimulatorState extends SimulatorState
 
-  val s = new Simulator[EnhancedSimulatorState] {
+  val s = new Simulator[EnhancedSimulatorState, Train] {
     override def simulate(schedules: Map[Train, Seq[Railway]]): Stream[EnhancedSimulatorState] = ???
   }
   s.register(new Listener[State] {})
