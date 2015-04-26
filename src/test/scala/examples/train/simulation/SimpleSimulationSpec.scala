@@ -7,12 +7,14 @@ import org.scalatest.{Suite, FlatSpec, Matchers}
 trait ListenerTest {
   this: Suite with MockFactory with Networks with Trains =>
 
-  def validateListenerNotification[S <: State](s: Simulator[S, Train]): Unit = {
+  val expectedEventCount: Int = 2
+
+  def validateListenerNotification[S <: State, T <: Train](s: Simulator[S, Train]): Unit = {
     val l = mock[Listener[S]]
 
-    (l.beforeStep _).expects(*).repeat(2)
-    (l.onTrainMove _).expects(*, *, *).repeat(2)
-    (l.afterStep _).expects(*).repeat(2)
+    (l.beforeStep _).expects(*).repeat(expectedEventCount)
+    (l.onTrainMove _).expects(*, *, *).repeat(expectedEventCount)
+    (l.afterStep _).expects(*).repeat(expectedEventCount)
 
     s.register(l)
     s.simulate(Map(t() -> linear(3)._2)).force
